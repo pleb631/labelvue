@@ -1,19 +1,16 @@
 <template>
-  <div class="card-radio-group" size="large">
-    <div class="reference" ref="referenceEl" >{{maxContent}}</div>
-    <el-card v-for="(item, index) in classValues"
-             :key="index"
-        class="card-option"
-        :class="{ 'active': selectClass === index }"
-        @click="selectClass = index"
-    ><div class="card-content">
-      <div class="color-block" :style="{ backgroundColor: item.color }"></div>
-      <div class="text-block" :style="{ minWidth: maxWidth + 'px'  }">
-        {{ index }}
-      </div>
+    <div class="card-radio-group" size="large">
+        <div class="reference" ref="referenceEl">{{ maxContent }}</div>
+        <el-card v-for="(item, index) in classValues" :key="index" class="card-option"
+            :class="{ 'active': selectClass === index }" @click="selectClass = index">
+            <div class="card-content">
+                <div class="color-block" :style="{ backgroundColor: item.color }"></div>
+                <div class="text-block" :style="{ minWidth: maxWidth + 'px' }">
+                    {{ index }}
+                </div>
+            </div>
+        </el-card>
     </div>
-    </el-card>
-  </div>
     <el-row :gutter="20" class="mgb20">
         <el-col :span="18">
             <canvas ref="canvasRef" class="canvas"></canvas>
@@ -21,37 +18,32 @@
         <el-col :span="5" class="labellist">
             labellist
 
-                  <LabelItem @change_class="change_class"
-                             @change_attr="change_attr"
-                             v-for="(item, index) in labels" :key="item.uuid" :labels="item"
-                             :index="index"
-                             :classValues="classValues"
-                             :class="selectedId === item.uuid ? 'is-selected' : ''"
-                             @click="selectItem(item.uuid)"
-                             shadow="hover"
-                  ></LabelItem>
+            <LabelItem @change_class="change_class" @change_attr="change_attr" v-for="(item, index) in labels"
+                :key="item.uuid" :labels="item" :index="index" :classValues="classValues"
+                :class="selectedId === item.uuid ? 'is-selected' : ''" @click="selectItem(item.uuid)" shadow="hover">
+            </LabelItem>
         </el-col>
     </el-row>
     <el-row>
         <el-button ref="editRef" type="primary" @click="change_mode($event)">{{ editText }}</el-button>
-            <el-button type="primary" @click="reset_editPanel()">原始大小</el-button>
-            <el-button type="primary" @click="onFocus()">{{onFocusText}}</el-button>
-            <el-button type="primary" @click="hideLabel()">{{hideLabelText}}</el-button>
-            <el-button type="primary" @click="test_update()">test_update</el-button>
-      <el-button type="primary" @click="test_update_attr()">test_update_attr</el-button>
+        <el-button type="primary" @click="reset_editPanel()">原始大小</el-button>
+        <el-button type="primary" @click="onFocus()">{{ onFocusText }}</el-button>
+        <el-button type="primary" @click="hideLabel()">{{ hideLabelText }}</el-button>
+        <el-button type="primary" @click="test_update()">test_update</el-button>
+        <el-button type="primary" @click="test_update_attr()">test_update_attr</el-button>
     </el-row>
     <el-row>
-<!--            鼠标状态：{{ isMouseDown }}-->
+        <!--            鼠标状态：{{ isMouseDown }}-->
     </el-row>
 </template>
 
 
 <script setup lang="ts" name="Det">
 import CanvasSelect from "canvas-select";
-import {onMounted, ref, watch, computed, nextTick, reactive, type ComputedRef} from 'vue'
-import {createUuid} from "@/tools/uuid.ts";
+import { onMounted, ref, watch, computed, nextTick, reactive, type ComputedRef } from 'vue'
+import { createUuid } from "@/tools/uuid.ts";
 import LabelItem from "@/components/LabelItem.vue"
-import {ClassValue} from "@/tools/type.ts"
+import { ClassValue } from "@/tools/type.ts"
 import _ from "lodash"
 
 const classValues: Record<string, ClassValue> = {
@@ -119,35 +111,35 @@ const props = withDefaults(defineProps<{
         },
     ],
     classValues: {
-      person: {
-        value: 0,
+        person: {
+            value: 0,
             color: "#f00",
             attr: {
-          attr1: ["1", "2"],
-              attr2: ["3", "4"],
-              attr3: ["5", "6"],
-        }
+                attr1: ["1", "2"],
+                attr2: ["3", "4"],
+                attr3: ["5", "6"],
+            }
 
-      },
-      car: {
-        value: 1,
+        },
+        car: {
+            value: 1,
             color: "#0000ff",
             attr: {
-          attr4: ["11", "12"],
-              attr5: ["31", "114"],
-              attr6: ["51", "16"],
-        }
+                attr4: ["11", "12"],
+                attr5: ["31", "114"],
+                attr6: ["51", "16"],
+            }
 
-      },
-      truck: {
-        value: 2,
+        },
+        truck: {
+            value: 2,
             color: "#00ff00",
 
-      },
-      bus: {
-        value: 3,
+        },
+        bus: {
+            value: 3,
             color: "#ff00ff",
-      },
+        },
     }
 
 })
@@ -184,7 +176,7 @@ const handleMouseUp = () => {
 
 
 
-function get_classinfo(label:string) {
+function get_classinfo(label: string) {
     let classinfo = classValues[label]
     let labelFillStyle = classinfo["color"];
     let strokeStyle = classinfo["color"];
@@ -202,14 +194,14 @@ function change_mode(event: PointerEvent) {
 }
 const editText = computed(() => createType.value ? "编辑/移动" : "创建标注")
 watch(createType, (val) => {
-    if(instance.value)
+    if (instance.value)
         instance.value.createType = val;
 });
 
 
 // 还原画面大小
-function reset_editPanel(){
-    if(instance.value){
+function reset_editPanel() {
+    if (instance.value) {
         instance.value.fitZoom()
     }
 }
@@ -224,35 +216,35 @@ function onFocus() {
 const onFocusText = computed(() => instance.value?.focusMode ? "取消聚焦" : "聚焦")
 
 // 隐藏标签
-function hideLabel(){
-    if (!instance.value){
+function hideLabel() {
+    if (!instance.value) {
         return;
     }
     hideLabelRef.value = !hideLabelRef.value;
     let data = instance.value.dataset;
     for (let i = 0; i < data.length; i++) {
-        data[i].hideLabel=hideLabelRef.value;
+        data[i].hideLabel = hideLabelRef.value;
     }
     instance.value?.update()
 }
 const hideLabelText = computed(() => hideLabelRef.value ? "显示标签" : "隐藏标签")
 
 //test
-function test_update(){
-    if(instance.value){
+function test_update() {
+    if (instance.value) {
         place_data()
     }
 }
-function test_update_attr(){
-  console.log(labels)
+function test_update_attr() {
+    console.log(labels)
 }
 
 
 // 选择标注，有高亮效果
-const selectItem = (uuid:string) => {
+const selectItem = (uuid: string) => {
     selectedId.value = uuid
 
-    if(instance.value){
+    if (instance.value) {
         let dataset = instance.value.dataset
         for (let i = 0; i < dataset.length; i++) {
 
@@ -270,28 +262,28 @@ function change_class(event: any) {
     labels[labelindex].label = event.label;
     for (const innerKey in labels[labelindex].attr) {
         delete labels[labelindex].attr[innerKey]; // 清空属性
-  }
-    reset_data_item_class(event.uuid,event.label)
+    }
+    reset_data_item_class(event.uuid, event.label)
 }
 
 // 子组件改变属性
 function change_attr(event: any) {
 
-  const labelindex = labels.findIndex((item) => item.uuid === event.uuid)
-  labels[labelindex].attr = event.attr
+    const labelindex = labels.findIndex((item) => item.uuid === event.uuid)
+    labels[labelindex].attr = event.attr
 
 }
 
 
 
-function reset_data_item_class(uuid:string,label:string) {
+function reset_data_item_class(uuid: string, label: string) {
     if (instance.value === undefined) {
         return
     }
     let data = instance.value.dataset
     let index = data.findIndex((item) => item.uuid === uuid)
-    if(index!==-1){
-        let {labelFillStyle, strokeStyle, textFillStyle} = get_classinfo(label)
+    if (index !== -1) {
+        let { labelFillStyle, strokeStyle, textFillStyle } = get_classinfo(label)
         data[index].labelFillStyle = labelFillStyle
         data[index].strokeStyle = strokeStyle
         data[index].textFillStyle = textFillStyle
@@ -340,8 +332,7 @@ function place_data() {
             let coor = item.coor;
             let uuid = item.uuid;
             let type = 1;
-            let hideLabel = hideLabelRef
-            let {labelFillStyle, strokeStyle, textFillStyle} = get_classinfo(label)
+            let { labelFillStyle, strokeStyle, textFillStyle } = get_classinfo(label)
 
             data.push({
                 label,
@@ -380,7 +371,7 @@ async function waitIfMouseDown(timeout = 5000) {
 }
 async function updateLabels(result: any) {
 
-    if (selectedId.value===""){
+    if (selectedId.value === "") {
         return;
     }
     await waitIfMouseDown()
@@ -389,7 +380,7 @@ async function updateLabels(result: any) {
         return;
     }
 
-    labels[index].coor =result[index].coor;
+    labels[index].coor = result[index].coor;
 
 
 }
@@ -406,7 +397,7 @@ watch(instance, () => {
 
 
         //设置初始标注
-        instance.value.on("load",()=>{
+        instance.value.on("load", () => {
             place_data();
         })
 
@@ -417,15 +408,15 @@ watch(instance, () => {
 
         //挂载事件
         instance.value.on("add", (info: any) => {
-          if (classnames.findIndex((item)=>item===selectClass.value)==-1){
-            instance.value?.deleteByIndex(info.index)
-            return;
-          }
+            if (classnames.findIndex((item) => item === selectClass.value) == -1) {
+                instance.value?.deleteByIndex(info.index)
+                return;
+            }
             selectedId.value = info.uuid;
             info.label = selectClass.value;
             info.textFillStyle = "#fff";
 
-            let {labelFillStyle, strokeStyle, textFillStyle} = get_classinfo(info.label)
+            let { labelFillStyle, strokeStyle, textFillStyle } = get_classinfo(info.label)
             info.labelFillStyle = labelFillStyle;
             info.strokeStyle = strokeStyle;
             info.textFillStyle = textFillStyle;
@@ -449,14 +440,14 @@ watch(instance, () => {
 
 
         instance.value.on("select", (info: any) => {
-                if (info) {
-                    selectedId.value = info.uuid;
-                } else {
+            if (info) {
+                selectedId.value = info.uuid;
+            } else {
 
-                    selectedId.value = '';
+                selectedId.value = '';
 
-                }
             }
+        }
         )
 
 
@@ -474,24 +465,24 @@ onMounted(() => {
 
 
 onMounted(async () => {
-  // 找最长内容
-  maxContent.value = Object.keys(classValues).reduce((a, b) => a.length > b.length ? a : b);
+    // 找最长内容
+    maxContent.value = Object.keys(classValues).reduce((a, b) => a.length > b.length ? a : b);
 
-  await nextTick();
-  // 计算最长内容宽度
-  if (referenceEl.value) {
-    maxWidth.value = referenceEl.value.offsetWidth;
-  }
+    await nextTick();
+    // 计算最长内容宽度
+    if (referenceEl.value) {
+        maxWidth.value = referenceEl.value.offsetWidth;
+    }
 });
 
 onMounted(() => {
     let canvas = canvasRef.value
 
-    canvas.addEventListener('mousedown', (e:PointerEvent) => {
+    canvas.addEventListener('mousedown', (e: PointerEvent) => {
         handleMouseDown()
     })
 
-    canvas.addEventListener('mouseup', (e:PointerEvent) => {
+    canvas.addEventListener('mouseup', (e: PointerEvent) => {
         handleMouseUp()
     })
 })
@@ -502,65 +493,65 @@ onMounted(() => {
 .canvas {
     width: 100%;
     height: 100%;
-  border: 3px solid #3a3636;
+    border: 3px solid #3a3636;
 }
 
 .labellist {
     height: 600px;
     background-color: gray;
     overflow: scroll;
-    box-sizing:border-box;
+    box-sizing: border-box;
 
 }
 
 .card-radio-group {
-  display: flex;
-  gap: 12px;
+    display: flex;
+    gap: 12px;
 }
 
 .card-option {
 
-  text-align: center;
-  cursor: pointer;
-  border: 1px solid #dcdfe6;
-  transition: 0.3s;
-  --el-card-padding: 0px 0px 0px 0px;
+    text-align: center;
+    cursor: pointer;
+    border: 1px solid #dcdfe6;
+    transition: 0.3s;
+    --el-card-padding: 0px 0px 0px 0px;
 
 }
 
 .card-option.active {
-  border-color: #0d56a1;
-  box-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
-  background-color: #3076c1;
+    border-color: #0d56a1;
+    box-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
+    background-color: #3076c1;
 }
 
 
 .card-content {
-  display: flex;
-  align-items: center;
-  height: 25px;
-  padding: 5px;
+    display: flex;
+    align-items: center;
+    height: 25px;
+    padding: 5px;
 }
 
 .color-block {
-  width: 20px;
-  height: 50px;
-  border-radius: 4px 0 0 4px;
+    width: 20px;
+    height: 50px;
+    border-radius: 4px 0 0 4px;
 }
 
 .text-block {
-  flex: 1;
-  text-align: left;
-  font-weight: bold;
-  font-size: 20px;
+    flex: 1;
+    text-align: left;
+    font-weight: bold;
+    font-size: 20px;
 }
 
 .reference {
-  position: absolute;
-  visibility: hidden;
-  white-space: nowrap;
-  font-weight: bold;
-  font-size: 20px;
+    position: absolute;
+    visibility: hidden;
+    white-space: nowrap;
+    font-weight: bold;
+    font-size: 20px;
 }
 
 .is-selected {
