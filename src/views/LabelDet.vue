@@ -21,7 +21,9 @@
         <el-col :span="5" class="labellist">
             labellist
 
-                  <LabelItem @change_class="change_class" v-for="(item, index) in labels" :key="item.uuid" :labels="item"
+                  <LabelItem @change_class="change_class"
+                             @change_attr="change_attr"
+                             v-for="(item, index) in labels" :key="item.uuid" :labels="item"
                              :index="index"
                              :classValues="classValues"
                              :class="selectedId === item.uuid ? 'is-selected' : ''"
@@ -36,6 +38,7 @@
             <el-button type="primary" @click="onFocus()">{{onFocusText}}</el-button>
             <el-button type="primary" @click="hideLabel()">{{hideLabelText}}</el-button>
             <el-button type="primary" @click="test_update()">test_update</el-button>
+      <el-button type="primary" @click="test_update_attr()">test_update_attr</el-button>
     </el-row>
     <el-row>
 <!--            鼠标状态：{{ isMouseDown }}-->
@@ -45,7 +48,7 @@
 
 <script setup lang="ts" name="Det">
 import CanvasSelect from "canvas-select";
-import {onMounted, ref, watch, computed, nextTick} from 'vue'
+import {onMounted, ref, watch, computed, nextTick, reactive, type ComputedRef} from 'vue'
 import {createUuid} from "@/tools/uuid.ts";
 import LabelItem from "@/components/LabelItem.vue"
 import {ClassValue} from "@/tools/type.ts"
@@ -86,6 +89,7 @@ const classValues: Record<string, ClassValue> = {
 const props = withDefaults(defineProps<{
     imageUrl: string; // 图片 URL
     labels: any[]; // 传入的标注数据
+    classValues: Record<string, ClassValue>;
 
 }>(), {
     imageUrl: 'https://cdn.jsdelivr.net/npm/@heylight/cdn@%5E1/img/onepiece.png', labels: () => [
@@ -113,17 +117,51 @@ const props = withDefaults(defineProps<{
                 attr6: "6",
             }
         },
-    ]
+    ],
+    classValues: {
+      person: {
+        value: 0,
+            color: "#f00",
+            attr: {
+          attr1: ["1", "2"],
+              attr2: ["3", "4"],
+              attr3: ["5", "6"],
+        }
+
+      },
+      car: {
+        value: 1,
+            color: "#0000ff",
+            attr: {
+          attr4: ["11", "12"],
+              attr5: ["31", "114"],
+              attr6: ["51", "16"],
+        }
+
+      },
+      truck: {
+        value: 2,
+            color: "#00ff00",
+
+      },
+      bus: {
+        value: 3,
+            color: "#ff00ff",
+      },
+    }
+
 })
 
-let labels = ref(getdata(props.labels));
+let labels = reactive(getdata(props.labels));
 
 const canvasRef = ref()
 const editRef = ref()
 
 const hideLabelRef = ref(false)
 const createType = ref(1);
-const selectClass = ref(Object.keys(classValues)[0]);
+
+const classnames = Object.keys(classValues)
+const selectClass = ref(classnames[0]);
 const instance = ref<CanvasSelect>();
 
 const selectedId = ref<String>('')
@@ -205,6 +243,9 @@ function test_update(){
         place_data()
     }
 }
+function test_update_attr(){
+  console.log(labels)
+}
 
 
 // 选择标注，有高亮效果
@@ -222,14 +263,26 @@ const selectItem = (uuid:string) => {
 
 }
 
-//
+// 子组件改变分类
 function change_class(event: any) {
     // updateLabels(ins.dataset)
-    let labelindex = labels.value.findIndex((item) => item.uuid === event.uuid)
-    labels.value[labelindex].label = event.label;
-    labels.value[labelindex].attr = {}
+    const labelindex = labels.findIndex((item) => item.uuid === event.uuid)
+    labels[labelindex].label = event.label;
+    for (const innerKey in labels[labelindex].attr) {
+        delete labels[labelindex].attr[innerKey]; // 清空属性
+  }
     reset_data_item_class(event.uuid,event.label)
 }
+
+// 子组件改变属性
+function change_attr(event: any) {
+
+  const labelindex = labels.findIndex((item) => item.uuid === event.uuid)
+  labels[labelindex].attr = event.attr
+
+}
+
+
 
 function reset_data_item_class(uuid:string,label:string) {
     if (instance.value === undefined) {
@@ -279,10 +332,10 @@ function place_data() {
         return
     }
 
-    if (labels.value && labels.value.length > 0) {
+    if (labels && labels.length > 0) {
         let data = [];
-        for (let i = 0; i < labels.value.length; i++) {
-            let item = labels.value[i];
+        for (let i = 0; i < labels.length; i++) {
+            let item = labels[i];
             let label = item.label;
             let coor = item.coor;
             let uuid = item.uuid;
@@ -336,7 +389,7 @@ async function updateLabels(result: any) {
         return;
     }
 
-    labels.value[index].coor =result[index].coor;
+    labels[index].coor =result[index].coor;
 
 
 }
@@ -364,7 +417,10 @@ watch(instance, () => {
 
         //挂载事件
         instance.value.on("add", (info: any) => {
-
+          if (classnames.findIndex((item)=>item===selectClass.value)==-1){
+            instance.value?.deleteByIndex(info.index)
+            return;
+          }
             selectedId.value = info.uuid;
             info.label = selectClass.value;
             info.textFillStyle = "#fff";
@@ -375,7 +431,7 @@ watch(instance, () => {
             info.textFillStyle = textFillStyle;
             info.hideLabel = hideLabelRef.value
 
-            labels.value.push({
+            labels.push({
                 label: info.label,
                 coor: info.coor,
                 uuid: info.uuid,
@@ -384,8 +440,11 @@ watch(instance, () => {
         });
 
         instance.value.on("delete", (info: any) => {
-            let index = labels.value.findIndex((item: any) => item.uuid === info.uuid);
-            labels.value.splice(index, 1);
+            let index = labels.findIndex((item: any) => item.uuid === info.uuid);
+            if (index === -1) {
+                return;
+            }
+            labels.splice(index, 1);
         });
 
 
@@ -395,7 +454,7 @@ watch(instance, () => {
                 } else {
 
                     selectedId.value = '';
-                    // console.log(selectedId.value)
+
                 }
             }
         )
@@ -421,7 +480,6 @@ onMounted(async () => {
   await nextTick();
   // 计算最长内容宽度
   if (referenceEl.value) {
-    console.log("@@@",referenceEl.value.offsetWidth)
     maxWidth.value = referenceEl.value.offsetWidth;
   }
 });
@@ -444,6 +502,7 @@ onMounted(() => {
 .canvas {
     width: 100%;
     height: 100%;
+  border: 3px solid #3a3636;
 }
 
 .labellist {
