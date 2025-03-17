@@ -1,12 +1,19 @@
 <template>
-    <el-radio-group v-model="selectClass" class="classlist">
-        <el-radio
-            v-for="(item, index) in classValues"
-            :key="index"
-            :label="index">
-            {{ index }}
-        </el-radio>
-    </el-radio-group>
+  <div class="card-radio-group" size="large">
+    <div class="reference" ref="referenceEl" >{{maxContent}}</div>
+    <el-card v-for="(item, index) in classValues"
+             :key="index"
+        class="card-option"
+        :class="{ 'active': selectClass === index }"
+        @click="selectClass = index"
+    ><div class="card-content">
+      <div class="color-block" :style="{ backgroundColor: item.color }"></div>
+      <div class="text-block" :style="{ minWidth: maxWidth + 'px'  }">
+        {{ index }}
+      </div>
+    </div>
+    </el-card>
+  </div>
     <el-row :gutter="20" class="mgb20">
         <el-col :span="18">
             <canvas ref="canvasRef" class="canvas"></canvas>
@@ -38,7 +45,7 @@
 
 <script setup lang="ts" name="Det">
 import CanvasSelect from "canvas-select";
-import {onMounted, ref, watch, computed, onUnmounted} from 'vue'
+import {onMounted, ref, watch, computed, nextTick} from 'vue'
 import {createUuid} from "@/tools/uuid.ts";
 import LabelItem from "@/components/LabelItem.vue"
 import {ClassValue} from "@/tools/type.ts"
@@ -123,8 +130,9 @@ const selectedId = ref<String>('')
 const isMouseDown = ref(false)
 
 
-
-
+const maxContent = ref('');
+const maxWidth = ref(0);
+const referenceEl = ref();
 
 // 检测鼠标是否按下，在按下的状态下不同步dataset
 const handleMouseDown = () => {
@@ -403,9 +411,20 @@ watch(instance, () => {
 
 onMounted(() => {
     instance.value = new CanvasSelect('canvas');
-
 })
 
+
+onMounted(async () => {
+  // 找最长内容
+  maxContent.value = Object.keys(classValues).reduce((a, b) => a.length > b.length ? a : b);
+
+  await nextTick();
+  // 计算最长内容宽度
+  if (referenceEl.value) {
+    console.log("@@@",referenceEl.value.offsetWidth)
+    maxWidth.value = referenceEl.value.offsetWidth;
+  }
+});
 
 onMounted(() => {
     let canvas = canvasRef.value
@@ -435,8 +454,58 @@ onMounted(() => {
 
 }
 
+.card-radio-group {
+  display: flex;
+  gap: 12px;
+}
+
+.card-option {
+
+  text-align: center;
+  cursor: pointer;
+  border: 1px solid #dcdfe6;
+  transition: 0.3s;
+  --el-card-padding: 0px 0px 0px 0px;
+
+}
+
+.card-option.active {
+  border-color: #0d56a1;
+  box-shadow: 0 0 10px rgba(64, 158, 255, 0.5);
+  background-color: #3076c1;
+}
+
+
+.card-content {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 5px;
+}
+
+.color-block {
+  width: 20px;
+  height: 50px;
+  border-radius: 4px 0 0 4px;
+}
+
+.text-block {
+  flex: 1;
+  text-align: left;
+  font-weight: bold;
+  font-size: 20px;
+}
+
+.reference {
+  position: absolute;
+  visibility: hidden;
+  white-space: nowrap;
+  font-weight: bold;
+  font-size: 20px;
+}
+
 .is-selected {
-    border: 3px solid #2684e3;
+    border: 3px solid #075eb5;
 }
 </style>
 
